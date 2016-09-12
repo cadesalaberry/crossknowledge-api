@@ -89,9 +89,14 @@ function extractTokenFromPage(page) {
 // On https://mylearning.lms.crossknowledge.com/candidat/profile.php
   reply looks like:
   {
-    learnerLogin: "sebastien@sparted.com",
-    password    : "n8wx6fekx4",
-    instanceUrl : "https://mylearning.lms.crossknowledge.com/",
+    message: 'Success',
+    totalResults: 1,
+    success: true,
+    value: {
+      learnerLogin: "sebastien@sparted.com",
+      password    : "n8wx6fekx4",
+      instanceUrl : "https://mylearning.lms.crossknowledge.com/",
+    }
   }
  */
 function authenticatePlayer(token) {
@@ -113,10 +118,13 @@ function authenticatePlayer(token) {
 /*
   loginResult looks like:
   {
-    "message"     :"Loginsuccessful",
-    "success"     :true,
-    "totalResults":1,
-    "value"       :[{}],
+    "message"     : "Login successful",
+    "success"     : true,
+    "totalResults": 1,
+    "value"       : {
+      mainColor: '#BE0E00',
+      logoUrl: 'https://mylearning.lms.crossknowledge.com/data/medias/mobileCompanionLogo1397464257.png'
+    },
   }
 */
 function playerMobileLogin() {
@@ -139,7 +147,9 @@ function playerMobileLogin() {
 }
 
 /*
-  { "message"     : "OK",
+  Should look like:
+  {
+    "message"     : "OK",
     "success"     : true,
     "totalResults": 1,
     "value"       : {
@@ -153,6 +163,15 @@ function playerMobileLogin() {
       "presentation"    : ""
     },
   }
+
+  But actually returns:
+  {
+    message     : 'Login successful',
+    success     : true,
+    totalResults: 1,
+    value       : {}
+  }
+
  */
 function playerLogin() {
 
