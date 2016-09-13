@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var request = require('request-promise');
 var cheerio = require('cheerio');
 
-var setup = {
+var CK_URL_SETUP = {
   fakeLoginURL     : 'https://mylearning.lms.crossknowledge.com/login_trainee.php',
   profileURL       : 'https://mylearning.lms.crossknowledge.com/candidat/profile.php',
   // FIXME: I get a "405 - An Error Occurred: Method Not Allowed" if I use https
@@ -22,8 +22,6 @@ var webLoginPayload = {
   login: CK_USER_EMAIL,
   pass : CK_USER_PASSWORD,
 };
-
-console.log('[web-login]', webLoginPayload);
 
 Promise
   .resolve(webLoginPayload)
@@ -48,7 +46,7 @@ function webLogin(_webLoginPayload) {
   var options = {
     method  : 'POST',
     jar     : true,
-    uri     : setup.fakeLoginURL,
+    uri     : CK_URL_SETUP.fakeLoginURL,
     formData: {
       auth_driver         : '1',
       login               : 'FAKE_USERNAME',
@@ -70,7 +68,7 @@ function getProfilePage() {
   var options = {
     method: 'GET',
     jar   : true,
-    uri   : setup.profileURL,
+    uri   : CK_URL_SETUP.profileURL,
   };
 
   return request(options);
@@ -104,7 +102,7 @@ function authenticatePlayer(token) {
   var options = {
     method: 'POST',
     json  : true,
-    uri   : setup.authenticationURL,
+    uri   : CK_URL_SETUP.authenticationURL,
     qs    : {
       token: token,
     },
@@ -134,7 +132,7 @@ function playerMobileLogin() {
   var options = {
     method: 'POST',
     json  : true,
-    uri   : setup.mobileLoginURL,
+    uri   : CK_URL_SETUP.mobileLoginURL,
     body  : {
       login   : authInformations.learnerLogin,
       password: authInformations.password,
@@ -180,7 +178,7 @@ function playerLogin() {
     method: 'POST',
     json  : true, // Automatically stringifies the body to JSON
     jar   : true, // FIXME: Getting a 401 if not used... so RESTFUL bro
-    uri   : setup.loginURL,
+    uri   : CK_URL_SETUP.loginURL,
     body  : {
       login   : authInformations.learnerLogin,
       password: authInformations.password,
@@ -220,7 +218,7 @@ function playerAccount() {
     method: 'GET',
     json  : true, // Automatically stringifies the body to JSON
     jar   : true, // FIXME: Getting a 401 if not used... so RESTFUL bro
-    uri   : setup.accountURL,
+    uri   : CK_URL_SETUP.accountURL,
     qs  : {
       learnerLogin: authInformations.learnerLogin,
     },
