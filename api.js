@@ -25,7 +25,7 @@ var CrossKnowledgeAPI = function CrossKnowledgeAPI(setup) {
   // Overrides default URL config
   for (var key in setup)
     self.urlConfig[key] = setup[key];
-}
+};
 
 CrossKnowledgeAPI.prototype.debug = function debug(webCredentials) {
   var self = this;
@@ -47,7 +47,7 @@ CrossKnowledgeAPI.prototype.debug = function debug(webCredentials) {
     .tap(console.log.bind(console, '[login]'))
     .then(exec(self, 'playerAccount'))
     .tap(console.log.bind(console, '[account]'));
-}
+};
 
 CrossKnowledgeAPI.prototype.authenticateTest = function authenticateTest(webCredentials) {
   var self = this;
@@ -63,19 +63,25 @@ CrossKnowledgeAPI.prototype.authenticateTest = function authenticateTest(webCred
     .then(exec(self, 'playerLogin'))
     .then(exec(self, 'playerAccount'))
     .tap(console.log.bind(console, '[account]'));
-}
+};
 
 function exec(self, fctName) {
   return self[fctName].bind(self);
 }
 
 CrossKnowledgeAPI.prototype.authenticate = function authenticate(token) {
+  var self = this;
+
   return Promise
   .resolve(token)
   .then(exec(self, 'authenticatePlayer'))
+    .tap(console.log.bind(console, '[auth]'))
   .tap(exec(self, 'saveAuthInformations'))
+    .tap(console.log.bind(console, '[save]'))
   .then(exec(self, 'playerMobileLogin'))
-  // .then(exec(self, 'playerLogin'))
+    .tap(console.log.bind(console, '[mobile]'))
+  .then(exec(self, 'playerLogin'))
+    .tap(console.log.bind(console, '[login]'))
   .then(exec(self, 'playerAccount'));
 };
 
@@ -101,7 +107,7 @@ CrossKnowledgeAPI.prototype.webLogin = function webLogin(_webCredentials) {
     options.formData[key] = _webCredentials[key];
 
   return request(options);
-}
+};
 
 CrossKnowledgeAPI.prototype.getProfilePage = function getProfilePage() {
   var self = this;
@@ -113,14 +119,14 @@ CrossKnowledgeAPI.prototype.getProfilePage = function getProfilePage() {
   };
 
   return request(options);
-}
+};
 
 CrossKnowledgeAPI.prototype.extractTokenFromPage = function extractTokenFromPage(page) {
   var $ = cheerio.load(page);
   var token = $('.token').text();
 
   return token;
-}
+};
 
 /*
 
@@ -154,7 +160,7 @@ CrossKnowledgeAPI.prototype.authenticatePlayer = function authenticatePlayer(tok
   };
 
   return request(options);
-}
+};
 
 
 /*
@@ -188,7 +194,7 @@ CrossKnowledgeAPI.prototype.playerMobileLogin = function playerMobileLogin() {
   // console.log('[first]', 'options.body', options.body);
 
   return request(options);
-}
+};
 
 /*
   playerLogin looks like:
@@ -215,7 +221,7 @@ CrossKnowledgeAPI.prototype.playerLogin = function playerLogin() {
   };
 
   return request(options);
-}
+};
 
 /*
   {
@@ -249,13 +255,13 @@ CrossKnowledgeAPI.prototype.playerAccount = function playerAccount() {
     json  : true, // Automatically stringifies the body to JSON
     jar   : true, // FIXME: Getting a 401 if not used... so RESTFUL bro
     uri   : self.urlConfig.accountURL,
-    qs  : {
+    qs    : {
       learnerLogin: self.authInformations.learnerLogin,
     },
   };
 
   return request(options);
-}
+};
 
 CrossKnowledgeAPI.prototype.saveAuthInformations = function saveAuthInformations(_authInformations) {
   var self = this;
@@ -264,7 +270,7 @@ CrossKnowledgeAPI.prototype.saveAuthInformations = function saveAuthInformations
 
   for (var key in _authInformations.value)
     self.authInformations[key] = _authInformations.value[key];
-}
+};
 
 module.exports = CrossKnowledgeAPI;
 
