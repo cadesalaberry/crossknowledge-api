@@ -146,24 +146,7 @@ function playerMobileLogin() {
 }
 
 /*
-  Should look like:
-  {
-    "message"     : "OK",
-    "success"     : true,
-    "totalResults": 1,
-    "value"       : {
-      "login"           : "hendrix",
-      "name"            :"Jimi",
-      "firstname"       : "Jimi",
-      "email"           : "jimi.hendrix@example.com",
-      "lastAccessDate"  : "2015-02-26 18:44:44",
-      "normalPictureUrl": "http://ckls132.ckls.local:8080/candidate_picture/guid/37D0DE04-6D43-5C08-D46F-C6F38E5F02E0/width/100/height/100/modhash/29a71fdbdacce128264fa2776221c133/",
-      "bigPictureUrl"   : "http://ckls132.ckls.local:8080/candidate_picture/guid/37D0DE04-6D43-5C08-D46F-C6F38E5F02E0/width/500/height/500/modhash/29a71fdbdacce128264fa2776221c133/",
-      "presentation"    : ""
-    },
-  }
-
-  But actually returns:
+  playerLogin looks like:
   {
     message     : 'Login successful',
     success     : true,
