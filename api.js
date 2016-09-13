@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var request = require('request-promise');
 var cheerio = require('cheerio');
 
-var CK_URL_SETUP = {
+var CK_URL_CONFIG = {
   fakeLoginURL     : 'https://mylearning.lms.crossknowledge.com/login_trainee.php',
   profileURL       : 'https://mylearning.lms.crossknowledge.com/candidat/profile.php',
   // FIXME: I get a "405 - An Error Occurred: Method Not Allowed" if I use https
@@ -14,39 +14,78 @@ var CK_URL_SETUP = {
   loginURL         : 'https://mylearning.lms.crossknowledge.com/API/v1/REST/Learner/login.json',
   accountURL       : 'https://mylearning.lms.crossknowledge.com/API/v1/REST/Learner/profile.json',
 };
-var CK_USER_EMAIL = process.env.CK_USER_EMAIL;
-var CK_USER_PASSWORD = process.env.CK_USER_PASSWORD;
 
-var authInformations = {};
-var webLoginPayload = {
-  login: CK_USER_EMAIL,
-  pass : CK_USER_PASSWORD,
+var CrossKnowledgeAPI = function CrossKnowledgeAPI(setup) {
+  var self = this;
+
+  self.urlConfig = JSON.parse(JSON.stringify(CK_URL_CONFIG));
+
+  self.authInformations = {};
+
+  // Overrides default URL config
+  for (var key in setup)
+    self.urlConfig[key] = setup[key];
+}
+
+CrossKnowledgeAPI.prototype.debug = function debug(webCredentials) {
+  var self = this;
+
+  return Promise
+    .resolve(webCredentials)
+    .then(exec(self, 'webLogin'))
+    .then(exec(self, 'getProfilePage'))
+    .then(exec(self, 'extractTokenFromPage'))
+    .tap(console.log.bind(console, '[token]'))
+    .then(exec(self, 'authenticatePlayer'))
+    .tap(exec(self, 'saveAuthInformations'))
+    .tap(console.log.bind(console, '[auth]'))
+    // FIXED?: Forces a delay to allow server to record the login event
+    // .delay(3000)
+    .then(exec(self, 'playerMobileLogin'))
+    .tap(console.log.bind(console, '[first]'))
+    .then(exec(self, 'playerLogin'))
+    .tap(console.log.bind(console, '[login]'))
+    .then(exec(self, 'playerAccount'))
+    .tap(console.log.bind(console, '[account]'));
+}
+
+CrossKnowledgeAPI.prototype.authenticateTest = function authenticateTest(webCredentials) {
+  var self = this;
+
+  return Promise
+    .resolve(webCredentials)
+    .then(exec(self, 'webLogin'))
+    .then(exec(self, 'getProfilePage'))
+    .then(exec(self, 'extractTokenFromPage'))
+    .then(exec(self, 'authenticatePlayer'))
+    .tap(exec(self, 'saveAuthInformations'))
+    .then(exec(self, 'playerMobileLogin'))
+    .then(exec(self, 'playerLogin'))
+    .then(exec(self, 'playerAccount'))
+    .tap(console.log.bind(console, '[account]'));
+}
+
+function exec(self, fctName) {
+  return self[fctName].bind(self);
+}
+
+CrossKnowledgeAPI.prototype.authenticate = function authenticate(token) {
+  return Promise
+  .resolve(token)
+  .then(exec(self, 'authenticatePlayer'))
+  .tap(exec(self, 'saveAuthInformations'))
+  .then(exec(self, 'playerMobileLogin'))
+  // .then(exec(self, 'playerLogin'))
+  .then(exec(self, 'playerAccount'));
 };
 
-Promise
-  .resolve(webLoginPayload)
-  .then(webLogin)
-  .then(getProfilePage)
-  .then(extractTokenFromPage)
-  .tap(saveToken)
-  .tap(console.log.bind(console, '[token]'))
-  .then(authenticatePlayer)
-  .tap(saveAuthInformations)
-  .tap(console.log.bind(console, '[auth]'))
-  // FIXED?: Forces a delay to allow server to record the login event
-  // .delay(3000)
-  .then(playerMobileLogin)
-  .tap(console.log.bind(console, '[first]'))
-  .then(playerLogin)
-  .tap(console.log.bind(console, '[login]'))
-  .then(playerAccount)
-  .tap(console.log.bind(console, '[account]'));
+CrossKnowledgeAPI.prototype.webLogin = function webLogin(_webCredentials) {
+  var self = this;
 
-function webLogin(_webLoginPayload) {
   var options = {
     method  : 'POST',
     jar     : true,
-    uri     : CK_URL_SETUP.fakeLoginURL,
+    uri     : self.urlConfig.fakeLoginURL,
     formData: {
       auth_driver         : '1',
       login               : 'FAKE_USERNAME',
@@ -58,23 +97,25 @@ function webLogin(_webLoginPayload) {
     followAllRedirects: true,
   };
 
-  for (var key in _webLoginPayload)
-    options.formData[key] = _webLoginPayload[key];
+  for (var key in _webCredentials)
+    options.formData[key] = _webCredentials[key];
 
   return request(options);
 }
 
-function getProfilePage() {
+CrossKnowledgeAPI.prototype.getProfilePage = function getProfilePage() {
+  var self = this;
+
   var options = {
     method: 'GET',
     jar   : true,
-    uri   : CK_URL_SETUP.profileURL,
+    uri   : self.urlConfig.profileURL,
   };
 
   return request(options);
 }
 
-function extractTokenFromPage(page) {
+CrossKnowledgeAPI.prototype.extractTokenFromPage = function extractTokenFromPage(page) {
   var $ = cheerio.load(page);
   var token = $('.token').text();
 
@@ -98,11 +139,13 @@ function extractTokenFromPage(page) {
     }
   }
  */
-function authenticatePlayer(token) {
+CrossKnowledgeAPI.prototype.authenticatePlayer = function authenticatePlayer(token) {
+  var self = this;
+
   var options = {
     method: 'POST',
     json  : true,
-    uri   : CK_URL_SETUP.authenticationURL,
+    uri   : self.urlConfig.authenticationURL,
     qs    : {
       token: token,
     },
@@ -126,21 +169,23 @@ function authenticatePlayer(token) {
     },
   }
 */
-function playerMobileLogin() {
+CrossKnowledgeAPI.prototype.playerMobileLogin = function playerMobileLogin() {
+  var self = this;
+
   // Identify the device by concatenating the App name and the device MAC address.
   var deviceId = 'SPARTED00:00:00:00:00:00:00';
   var options = {
     method: 'POST',
     json  : true,
-    uri   : CK_URL_SETUP.mobileLoginURL,
+    uri   : self.urlConfig.mobileLoginURL,
     body  : {
-      login   : authInformations.learnerLogin,
-      password: authInformations.password,
+      login   : self.authInformations.learnerLogin,
+      password: self.authInformations.password,
       deviceid: deviceId,
     },
   };
 
-  console.log('[first]', 'options.body', options.body);
+  // console.log('[first]', 'options.body', options.body);
 
   return request(options);
 }
@@ -155,16 +200,17 @@ function playerMobileLogin() {
   }
 
  */
-function playerLogin() {
+CrossKnowledgeAPI.prototype.playerLogin = function playerLogin() {
+  var self = this;
 
   var options = {
     method: 'POST',
     json  : true, // Automatically stringifies the body to JSON
     jar   : true, // FIXME: Getting a 401 if not used... so RESTFUL bro
-    uri   : CK_URL_SETUP.loginURL,
+    uri   : self.urlConfig.loginURL,
     body  : {
-      login   : authInformations.learnerLogin,
-      password: authInformations.password,
+      login   : self.authInformations.learnerLogin,
+      password: self.authInformations.password,
     },
   };
 
@@ -195,30 +241,30 @@ function playerLogin() {
   }
 
  */
-function playerAccount() {
+CrossKnowledgeAPI.prototype.playerAccount = function playerAccount() {
+  var self = this;
 
   var options = {
     method: 'GET',
     json  : true, // Automatically stringifies the body to JSON
     jar   : true, // FIXME: Getting a 401 if not used... so RESTFUL bro
-    uri   : CK_URL_SETUP.accountURL,
+    uri   : self.urlConfig.accountURL,
     qs  : {
-      learnerLogin: authInformations.learnerLogin,
+      learnerLogin: self.authInformations.learnerLogin,
     },
   };
 
   return request(options);
 }
 
-function saveAuthInformations(_authInformations) {
-  console.log('[auth]', 'Saving auth info', _authInformations.value);
+CrossKnowledgeAPI.prototype.saveAuthInformations = function saveAuthInformations(_authInformations) {
+  var self = this;
+
+  // console.log('[auth]', 'Saving auth info', _authInformations.value);
 
   for (var key in _authInformations.value)
-    authInformations[key] = _authInformations.value[key];
+    self.authInformations[key] = _authInformations.value[key];
 }
 
-
-function saveToken(token) {
-  authInformations.token = token;
-}
+module.exports = CrossKnowledgeAPI;
 
