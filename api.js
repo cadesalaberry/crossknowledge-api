@@ -12,6 +12,7 @@ var setup = {
   authenticationURL: 'http://ckauth.crossknowledge.com/api/learner/authenticate.json',
   mobileLoginURL   : 'https://mylearning.lms.crossknowledge.com/API/v1/REST/Learner/mobileLogin.json',
   loginURL         : 'https://mylearning.lms.crossknowledge.com/API/v1/REST/Learner/login.json',
+  accountURL       : 'https://mylearning.lms.crossknowledge.com/API/v1/REST/Learner/profile.json',
 };
 var CK_USER_EMAIL = process.env.CK_USER_EMAIL;
 var CK_USER_PASSWORD = process.env.CK_USER_PASSWORD;
@@ -34,14 +35,14 @@ Promise
   .then(authenticatePlayer)
   .tap(saveAuthInformations)
   .tap(console.log.bind(console, '[auth]'))
-  // FIXME: Forces a delay to allow server to record the login event
-  .delay(3000)
+  // FIXED?: Forces a delay to allow server to record the login event
+  // .delay(3000)
   .then(playerMobileLogin)
   .tap(console.log.bind(console, '[first]'))
   .then(playerLogin)
-  .then(playerLogin)
-  .then(playerLogin)
-  .tap(console.log.bind(console, '[login]'));
+  .tap(console.log.bind(console, '[login]'))
+  .then(playerAccount)
+  .tap(console.log.bind(console, '[account]'));
 
 function webLogin(_webLoginPayload) {
   var options = {
@@ -183,6 +184,45 @@ function playerLogin() {
     body  : {
       login   : authInformations.learnerLogin,
       password: authInformations.password,
+    },
+  };
+
+  return request(options);
+}
+
+/*
+  {
+    message: 'OK',
+    success: true,
+    totalResults: 1,
+    value: {
+      id: 539997,
+      login: 'sebastien@sparted.com',
+      name: '',
+      firstname: 'Sebastien',
+      email: '',
+      lastAccessDate: '2016-09-13 11:41:14',
+      normalPictureUrl: 'https://mylearning.lms.crossknowledge.com/candidate_picture/guid/A670B81B-E526-A554-AAE7-25CD14EA0150/width/100/height/100/modhash/2cc9af51e867a984753f242e7714c3a9/',
+      bigPictureUrl: 'https://mylearning.lms.crossknowledge.com/candidate_picture/guid/A670B81B-E526-A554-AAE7-25CD14EA0150/width/500/height/500/modhash/2cc9af51e867a984753f242e7714c3a9/',
+      displayName: 'Sebastien',
+      preferredLanguage: 'en-GB',
+      presentation: '',
+      webUrl: '',
+      linkedInUrl: '',
+      twitterUrl: ''
+    }
+  }
+
+ */
+function playerAccount() {
+
+  var options = {
+    method: 'GET',
+    json  : true, // Automatically stringifies the body to JSON
+    jar   : true, // FIXME: Getting a 401 if not used... so RESTFUL bro
+    uri   : setup.accountURL,
+    qs  : {
+      learnerLogin: authInformations.learnerLogin,
     },
   };
 
