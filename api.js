@@ -27,6 +27,13 @@ var CrossKnowledgeAPI = function CrossKnowledgeAPI(setup) {
     self.urlConfig[key] = setup[key];
 };
 
+/*
+  webCredentials looks like:
+  {
+    login: 'sebastien@sparted.com',
+    pass : 'SuP3R P@SSW0Rd',
+  }
+ */
 CrossKnowledgeAPI.prototype.debug = function debug(webCredentials) {
   var self = this;
 
@@ -49,6 +56,13 @@ CrossKnowledgeAPI.prototype.debug = function debug(webCredentials) {
     .tap(console.log.bind(console, '[account]'));
 };
 
+/*
+  webCredentials looks like:
+  {
+    login: 'sebastien@sparted.com',
+    pass : 'SuP3R P@SSW0Rd',
+  }
+*/
 CrossKnowledgeAPI.prototype.authenticateTest = function authenticateTest(webCredentials) {
   var self = this;
 
@@ -73,12 +87,12 @@ CrossKnowledgeAPI.prototype.authenticate = function authenticate(token) {
   var self = this;
 
   return Promise
-  .resolve(token)
-  .then(exec(self, 'authenticatePlayer'))
-  .tap(exec(self, 'saveAuthInformations'))
-  .then(exec(self, 'playerMobileLogin'))
-  .then(exec(self, 'playerLogin'))
-  .then(exec(self, 'playerAccount'));
+    .resolve(token)
+    .then(exec(self, 'authenticatePlayer'))
+    .tap(exec(self, 'saveAuthInformations'))
+    .then(exec(self, 'playerMobileLogin'))
+    .then(exec(self, 'playerLogin'))
+    .then(exec(self, 'playerAccount'));
 };
 
 CrossKnowledgeAPI.prototype.webLogin = function webLogin(_webCredentials) {
