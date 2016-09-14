@@ -75,13 +75,9 @@ CrossKnowledgeAPI.prototype.authenticate = function authenticate(token) {
   return Promise
   .resolve(token)
   .then(exec(self, 'authenticatePlayer'))
-    .tap(console.log.bind(console, '[auth]'))
   .tap(exec(self, 'saveAuthInformations'))
-    .tap(console.log.bind(console, '[save]'))
   .then(exec(self, 'playerMobileLogin'))
-    .tap(console.log.bind(console, '[mobile]'))
   .then(exec(self, 'playerLogin'))
-    .tap(console.log.bind(console, '[login]'))
   .then(exec(self, 'playerAccount'));
 };
 
@@ -183,6 +179,7 @@ CrossKnowledgeAPI.prototype.playerMobileLogin = function playerMobileLogin() {
   var options = {
     method: 'POST',
     json  : true,
+    jar   : true,
     uri   : self.urlConfig.mobileLoginURL,
     body  : {
       login   : self.authInformations.learnerLogin,
@@ -260,7 +257,17 @@ CrossKnowledgeAPI.prototype.playerAccount = function playerAccount() {
     },
   };
 
-  return request(options);
+  return request(options)
+    .then(patchWithAuthInformations);
+
+
+  function patchWithAuthInformations(o) {
+
+    for (var key in self.authInformations)
+      o.value[key] = self.authInformations[key];
+
+    return o.value;
+  }
 };
 
 CrossKnowledgeAPI.prototype.saveAuthInformations = function saveAuthInformations(_authInformations) {
