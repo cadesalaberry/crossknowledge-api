@@ -155,7 +155,17 @@ CrossKnowledgeAPI.prototype.authenticatePlayer = function authenticatePlayer(tok
     followAllRedirects: true,
   };
 
-  return request(options);
+  return request(options)
+    .then(detectInvalidToken);
+
+  function detectInvalidToken(reply) {
+    if (reply.errorcode) {
+      console.error('[crossknowledge]', token, reply);
+      return Promise.reject(new Error(reply.message));
+    }
+
+    return reply;
+  }
 };
 
 
